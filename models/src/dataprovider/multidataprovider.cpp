@@ -23,13 +23,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-/*
- * dataprovider.cpp
- *
- *  Created on: 2010-05-01
- *      Author: darek
- */
-
 #include <dataprovider/multidataprovider.h>
 
 #include <util.h>
@@ -52,97 +45,97 @@ namespace dataprovider
 using namespace debug;
 
 MultiDataProvider::MultiDataProvider(const std::string& filename) :
-	_filename(filename)
+    _filename(filename)
 {
-	loadFromFile(_filename);
-	dbg() << "MultiDataProvider(): " << _filename << std::endl;
+    loadFromFile(_filename);
+    dbg() << "MultiDataProvider(): " << _filename << std::endl;
 }
 
 MultiDataProvider::~MultiDataProvider()
 {
-	dbg() << "~MultiDataProvider()" << std::endl;
+    dbg() << "~MultiDataProvider()" << std::endl;
 }
 
 std::vector<double> MultiDataProvider::getData(int idx) const
 {
-	return _items[idx];
+    return _items[idx];
 }
 
 std::vector<std::vector<double> > MultiDataProvider::getDataVector(int idx,
-		size_t size) const
+        size_t size) const
 {
-	std::vector<std::vector<double> > tmpVector;
+    std::vector<std::vector<double> > tmpVector;
 
-	for (size_t i = 0; i < size; ++i)
-	{
-		tmpVector.push_back(_items[idx + i]);
-	}
+    for (size_t i = 0; i < size; ++i)
+    {
+        tmpVector.push_back(_items[idx + i]);
+    }
 
-	return tmpVector;
+    return tmpVector;
 }
 
 size_t MultiDataProvider::getDataSize() const
 {
-	return _items.size();
+    return _items.size();
 }
 
 std::vector<double> MultiDataProvider::getDataSubvector(int idx, size_t start,
-		size_t size) const
+        size_t size) const
 {
-	std::vector<double> tmp;
+    std::vector<double> tmp;
 
-	std::copy(_items[idx].begin() + start,
-			_items[idx].begin() + start + size, back_inserter(tmp));
+    std::copy(_items[idx].begin() + start,
+            _items[idx].begin() + start + size, back_inserter(tmp));
 
-	return tmp;
+    return tmp;
 }
 
 bool MultiDataProvider::loadFromFile(const std::string & filename)
 {
-	ifstream inData;
-	inData.open(filename.c_str());
-	if (!inData)
-		return false;
+    ifstream inData;
+    inData.open(filename.c_str());
+    if (!inData)
+        return false;
 
-	size_t size = 0;
-	string line;
-	while (!inData.eof())
-	{
-		std::vector<double> lineValues;
-		getline(inData, line);
-		std::istringstream iss(line);
-		while( !iss.eof() )
-		{
-			double tmp = 0.0;
-			iss >> tmp;
-			lineValues.push_back(tmp);
-		}
+    size_t size = 0;
+    string line;
+    while (!inData.eof())
+    {
+        std::vector<double> lineValues;
+        getline(inData, line);
+        std::istringstream iss(line);
+        while( !iss.eof() )
+        {
+            double tmp = 0.0;
+            iss >> tmp;
+            lineValues.push_back(tmp);
+        }
 
-		_items.push_back(lineValues);
+        _items.push_back(lineValues);
 
-		size++;
-	}
+        size++;
+    }
 
-	return true;
+    return true;
 }
 
 double MultiDataProvider::getMaxValue() const
 {
-	double max = 0.0;
+    double max = 0.0;
 
-	for(unsigned i=0; i < _items.size(); ++i)
-	{
-		double el = *(std::max_element(_items[i].begin(), _items[i].end()));
-		max = std::max(max, el);
-	}
+    for(unsigned i=0; i < _items.size(); ++i)
+    {
+        double el = *(std::max_element(_items[i].begin(), _items[i].end()));
+        max = std::max(max, el);
+    }
 
-	dbg() << "[MultiDataProvider::getMaxValue()] MAX: " << max << std::endl;
-	return max;
+    dbg() << "[MultiDataProvider::getMaxValue()] MAX: " << max << std::endl;
+    return max;
 }
 
 double MultiDataProvider::getValue(int idx, size_t pos) const
 {
-	return _items[idx][pos];
+    return _items[idx][pos];
 }
 
 }

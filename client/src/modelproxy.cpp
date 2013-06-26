@@ -23,13 +23,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-/*
- * modelproxy.cpp
- *
- *  Created on: 2010-05-09
- *      Author: darek
- */
-
 #include <modelproxy.h>
 
 #include <util.h>
@@ -52,181 +45,181 @@ const char* ModelProxy::MODELS[] =
 { "chaos", "grey", "neural" };
 
 ModelProxy::ModelProxy(boost::asio::io_service& io_service,
-		boost::asio::ip::tcp::resolver::iterator endpoint_iterator,
-		const ParsedOptions& opts, ServerData sd,
-		boost::function<void(const ResultInfo)> resultCallback) :
-	_running(true), _connection(io_service), _opts(opts), _resultCallback(
-			resultCallback), _progress(0), _dataLength(_opts.DataLength),
-			_io_service(io_service), _serverData(sd), _endpoint_iterator(endpoint_iterator)
+        boost::asio::ip::tcp::resolver::iterator endpoint_iterator,
+        const ParsedOptions& opts, ServerData sd,
+        boost::function<void(const ResultInfo)> resultCallback) :
+    _running(true), _connection(io_service), _opts(opts), _resultCallback(
+            resultCallback), _progress(0), _dataLength(_opts.DataLength),
+            _io_service(io_service), _serverData(sd), _endpoint_iterator(endpoint_iterator)
 {
-	dbg() << "ModelProxy()" << std::endl;
+    dbg() << "ModelProxy()" << std::endl;
 }
 
 ModelProxy::~ModelProxy()
 {
-	_connection.socket().close();
-	dbg() << "~ModelProxy()" << std::endl;
+    _connection.socket().close();
+    dbg() << "~ModelProxy()" << std::endl;
 }
 
 void ModelProxy::start()
 {
-	dbg() << "ModelProxy::start()" << std::endl;
-	_thread = new boost::thread(boost::ref(*this));
+    dbg() << "ModelProxy::start()" << std::endl;
+    _thread = new boost::thread(boost::ref(*this));
 }
 
 void ModelProxy::stop()
 {
-	_running = false;
+    _running = false;
 }
 
 void ModelProxy::initConnection()
 {
-	try
-	{
-	dbg() << "ModelProxy::initConnection()" << std::endl;
-	// Resolve the host name into an IP address.
+    try
+    {
+    dbg() << "ModelProxy::initConnection()" << std::endl;
+    // Resolve the host name into an IP address.
 
-	boost::asio::ip::tcp::endpoint endpoint = *_endpoint_iterator;
+    boost::asio::ip::tcp::endpoint endpoint = *_endpoint_iterator;
 
-	dbg() << "ModelProxy::initConnection() -- 2" << std::endl;
+    dbg() << "ModelProxy::initConnection() -- 2" << std::endl;
 
-	dbg() << "Async connect to " << _serverData.ServerName << ":" << _serverData.Port << std::endl;
-	_connection.socket().async_connect(endpoint, boost::bind(
-			&ModelProxy::handle_connect, this,
-			boost::asio::placeholders::error, ++_endpoint_iterator));
-	std::cout << "ModelProxy::initConnection() -- END" << std::endl;
-	}
-	catch( std::exception& e )
-	{
-		dbg(debug::High) << e.what() << std::endl;
-	}
+    dbg() << "Async connect to " << _serverData.ServerName << ":" << _serverData.Port << std::endl;
+    _connection.socket().async_connect(endpoint, boost::bind(
+            &ModelProxy::handle_connect, this,
+            boost::asio::placeholders::error, ++_endpoint_iterator));
+    std::cout << "ModelProxy::initConnection() -- END" << std::endl;
+    }
+    catch( std::exception& e )
+    {
+        dbg(debug::High) << e.what() << std::endl;
+    }
 }
 
 void ModelProxy::operator ()()
 {
-	initConnection();
+    initConnection();
 
-	dbg() << "Before running..." << std::endl;
-	while (_running)
-	{
-		dbg() << "Thread working..." << std::endl;
-		boost::this_thread::sleep(boost::posix_time::seconds(SLEEP_TIME));
-	}
-	dbg() << "After running..." << std::endl;
+    dbg() << "Before running..." << std::endl;
+    while (_running)
+    {
+        dbg() << "Thread working..." << std::endl;
+        boost::this_thread::sleep(boost::posix_time::seconds(SLEEP_TIME));
+    }
+    dbg() << "After running..." << std::endl;
 }
 
 void ModelProxy::handle_connect(const boost::system::error_code & e,
-		boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
+        boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
 {
-	dbg() << "PredictionClient::handle_connect()" << std::endl;
-	if (!e)
-	{
-		sendInitPacket();
-	}
-	else if (endpoint_iterator != boost::asio::ip::tcp::resolver::iterator())
-	{
-		dbg() << "PredictionClient::handle_connect() - else if" << std::endl;
-		// Try the next endpoint.
-		_connection.socket().close();
-		boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
-		_connection.socket().async_connect(endpoint, boost::bind(
-				&ModelProxy::handle_connect, this,
-				boost::asio::placeholders::error, ++endpoint_iterator));
-	}
-	else
-	{
-		dbg(debug::High) << "PredictionClient::handle_connect(): "
-				<< e.message() << std::endl;
-	}
+    dbg() << "PredictionClient::handle_connect()" << std::endl;
+    if (!e)
+    {
+        sendInitPacket();
+    }
+    else if (endpoint_iterator != boost::asio::ip::tcp::resolver::iterator())
+    {
+        dbg() << "PredictionClient::handle_connect() - else if" << std::endl;
+        // Try the next endpoint.
+        _connection.socket().close();
+        boost::asio::ip::tcp::endpoint endpoint = *endpoint_iterator;
+        _connection.socket().async_connect(endpoint, boost::bind(
+                &ModelProxy::handle_connect, this,
+                boost::asio::placeholders::error, ++endpoint_iterator));
+    }
+    else
+    {
+        dbg(debug::High) << "PredictionClient::handle_connect(): "
+                << e.message() << std::endl;
+    }
 }
 
 void ModelProxy::handle_write(const boost::system::error_code & e)
 {
-	if (!e)
-	{
-		dbg() << "Sent: " << _connection.socket().remote_endpoint().address() << ":"
-				<< _connection.socket().remote_endpoint().port() << std::endl;
-		dbg() << _outBuffer << std::endl;
-		_connection.async_read(_inBuffer, boost::bind(
-				&ModelProxy::handle_read, this,
-				boost::asio::placeholders::error));
-	}
-	else
-	{
-		// An error occurred.
-		dbg(debug::High) << e.message() << std::endl;
-	}
+    if (!e)
+    {
+        dbg() << "Sent: " << _connection.socket().remote_endpoint().address() << ":"
+                << _connection.socket().remote_endpoint().port() << std::endl;
+        dbg() << _outBuffer << std::endl;
+        _connection.async_read(_inBuffer, boost::bind(
+                &ModelProxy::handle_read, this,
+                boost::asio::placeholders::error));
+    }
+    else
+    {
+        // An error occurred.
+        dbg(debug::High) << e.message() << std::endl;
+    }
 }
 
 void ModelProxy::handle_read(const boost::system::error_code& e)
 {
-	if (!e)
-	{
-		dbg() << "Received From: "
-				<< _connection.socket().remote_endpoint().address() << ":"
-				<< _connection.socket().remote_endpoint().port() << std::endl;
-		dbg() << _inBuffer << std::endl;
+    if (!e)
+    {
+        dbg() << "Received From: "
+                << _connection.socket().remote_endpoint().address() << ":"
+                << _connection.socket().remote_endpoint().port() << std::endl;
+        dbg() << _inBuffer << std::endl;
 
-		_modelIndex = getModelIndex(_inBuffer.Algorithm);
+        _modelIndex = getModelIndex(_inBuffer.Algorithm);
 
-		addResult(_inBuffer.Result);
+        addResult(_inBuffer.Result);
 
-		_connection.async_write(_outBuffer, boost::bind(
-				&ModelProxy::handle_write, this,
-				boost::asio::placeholders::error));
-	}
-	else
-	{
-		// An error occurred.
-		dbg(debug::High) << e.message() << std::endl;
-	}
+        _connection.async_write(_outBuffer, boost::bind(
+                &ModelProxy::handle_write, this,
+                boost::asio::placeholders::error));
+    }
+    else
+    {
+        // An error occurred.
+        dbg(debug::High) << e.message() << std::endl;
+    }
 }
 
 void ModelProxy::addResult(double result)
 {
-	boost::unique_lock<boost::mutex> lock(_bufferMutex);
-	_resultBuffer.push_back(result);
+    boost::unique_lock<boost::mutex> lock(_bufferMutex);
+    _resultBuffer.push_back(result);
 }
 
 double ModelProxy::getResult()
 {
-	boost::unique_lock<boost::mutex> lock(_bufferMutex);
-	double result = _resultBuffer.front();
-	_resultBuffer.pop_front();
-	return result;
+    boost::unique_lock<boost::mutex> lock(_bufferMutex);
+    double result = _resultBuffer.front();
+    _resultBuffer.pop_front();
+    return result;
 }
 
 unsigned ModelProxy::getModelIndex(const std::string& algName)
 {
-	size_t elemCount = 3;
-	for (size_t i = 0; i < elemCount; ++i)
-	{
-		if (algName == MODELS[i])
-		{
-			return i;
-		}
-	}
-	return -1;
+    size_t elemCount = 3;
+    for (size_t i = 0; i < elemCount; ++i)
+    {
+        if (algName == MODELS[i])
+        {
+            return i;
+        }
+    }
+    return -1;
 }
 
 void ModelProxy::sendInitPacket()
 {
-	dbg() << "Sending init packet: " << std::endl;
+    dbg() << "Sending init packet: " << std::endl;
 
-	dbg() << "Opts:" << std::endl;
-	dbg() << _opts << std::endl;
+    dbg() << "Opts:" << std::endl;
+    dbg() << _opts << std::endl;
 
-	//	_outBuffer = comm::protocol::Message();
-	_outBuffer.DataOffset = _opts.DataOffset;
-	_outBuffer.DataLength = _opts.DataLength;
-	_outBuffer.Horizon = _opts.Horizon;
+    //  _outBuffer = comm::protocol::Message();
+    _outBuffer.DataOffset = _opts.DataOffset;
+    _outBuffer.DataLength = _opts.DataLength;
+    _outBuffer.Horizon = _opts.Horizon;
 
-	dbg() << _outBuffer << std::endl;
+    dbg() << _outBuffer << std::endl;
 
-	_connection.async_write(_outBuffer, boost::bind(&ModelProxy::handle_write,
-			this, boost::asio::placeholders::error));
+    _connection.async_write(_outBuffer, boost::bind(&ModelProxy::handle_write,
+            this, boost::asio::placeholders::error));
 
-	dbg() << "After async write" << std::endl;
+    dbg() << "After async write" << std::endl;
 }
 
 }

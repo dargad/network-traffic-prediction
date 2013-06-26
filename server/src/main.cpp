@@ -47,106 +47,106 @@ ParsedOptions parseOptions(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
-	try
-	{
-		ParsedOptions opts(parseOptions(argc, argv));
-		debug::dbg(debug::Informational) << "Starting server with opts:"
-				<< opts;
-		boost::asio::io_service io_service;
-		PredictionServer ps(io_service, opts);
-		io_service.run();
-	} catch (exception& e)
-	{
-		dbg(debug::Highest) << e.what() << std::endl;
-	}
+    try
+    {
+        ParsedOptions opts(parseOptions(argc, argv));
+        debug::dbg(debug::Informational) << "Starting server with opts:"
+                << opts;
+        boost::asio::io_service io_service;
+        PredictionServer ps(io_service, opts);
+        io_service.run();
+    } catch (exception& e)
+    {
+        dbg(debug::Highest) << e.what() << std::endl;
+    }
 }
 
 ParsedOptions parseOptions(int argc, char *argv[])
 {
-	po::options_description desc("Client options");
-	desc.add_options()("help,h", "produce help message")
+    po::options_description desc("Client options");
+    desc.add_options()("help,h", "produce help message")
 
-	("listen-port,l",
-			po::value<unsigned>()->default_value(DEFAULT_SERVER_PORT),
-			"set server port for connection "
-				"(or service name e.g. http)")
+    ("listen-port,l",
+            po::value<unsigned>()->default_value(DEFAULT_SERVER_PORT),
+            "set server port for connection "
+                "(or service name e.g. http)")
 
-	("algorithm,a", po::value<std::string>(),
-			"set prediction algorithm: arima, grey, neural")
+    ("algorithm,a", po::value<std::string>(),
+            "set prediction algorithm: arima, grey, neural")
 
-	("input-file,i", po::value<std::string>(), "set path to the input file")
+    ("input-file,i", po::value<std::string>(), "set path to the input file")
 
-	("debug-level,d",
-			po::value<unsigned>()->default_value(debug::Informational),
-			"set debug level (0-4)");
+    ("debug-level,d",
+            po::value<unsigned>()->default_value(debug::Informational),
+            "set debug level (0-4)");
 
-	po::variables_map vm;
-	po::store(po::parse_command_line(argc, argv, desc), vm);
-	po::notify(vm);
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
 
-	if (vm.count("help"))
-	{
-		cout << desc << endl;
-		exit(1);
-	}
+    if (vm.count("help"))
+    {
+        cout << desc << endl;
+        exit(1);
+    }
 
-	ParsedOptions opts;
-	if (vm.count("listen-port"))
-	{
-		opts.ListenPort = vm["listen-port"].as<unsigned> ();
-	}
+    ParsedOptions opts;
+    if (vm.count("listen-port"))
+    {
+        opts.ListenPort = vm["listen-port"].as<unsigned> ();
+    }
 
-	if (vm.count("debug-level"))
-	{
-		unsigned val = vm["debug-level"].as<unsigned> ();
-		if (val >= debug::Debug && val <= debug::Highest)
-		{
-			debug::setVerbosity(static_cast<debug::DebugLevel> (val));
-		}
-	}
+    if (vm.count("debug-level"))
+    {
+        unsigned val = vm["debug-level"].as<unsigned> ();
+        if (val >= debug::Debug && val <= debug::Highest)
+        {
+            debug::setVerbosity(static_cast<debug::DebugLevel> (val));
+        }
+    }
 
-	if (vm.count("input-file"))
-	{
-		opts.InputFile = vm["input-file"].as<std::string> ();
-	}
-	else
-	{
-		dbg(debug::Highest) << "Input file not provided. Exiting." << endl;
-		exit(1);
-	}
+    if (vm.count("input-file"))
+    {
+        opts.InputFile = vm["input-file"].as<std::string> ();
+    }
+    else
+    {
+        dbg(debug::Highest) << "Input file not provided. Exiting." << endl;
+        exit(1);
+    }
 
-	if (!vm.count("algorithm"))
-	{
-		dbg(debug::Highest) << "Prediction algorithm not provided. Exiting."
-				<< endl;
-		exit(1);
-	}
-	else
-	{
-		vector<std::string> allowedAlgorithms;
-		size_t numAlgs = sizeof(ALLOWED_ALGORITHMS)
-				/ sizeof(ALLOWED_ALGORITHMS[0]);
-		allowedAlgorithms.resize(numAlgs);
-		copy(ALLOWED_ALGORITHMS, ALLOWED_ALGORITHMS + numAlgs,
-				allowedAlgorithms.begin());
+    if (!vm.count("algorithm"))
+    {
+        dbg(debug::Highest) << "Prediction algorithm not provided. Exiting."
+                << endl;
+        exit(1);
+    }
+    else
+    {
+        vector<std::string> allowedAlgorithms;
+        size_t numAlgs = sizeof(ALLOWED_ALGORITHMS)
+                / sizeof(ALLOWED_ALGORITHMS[0]);
+        allowedAlgorithms.resize(numAlgs);
+        copy(ALLOWED_ALGORITHMS, ALLOWED_ALGORITHMS + numAlgs,
+                allowedAlgorithms.begin());
 
-		std::string algName = vm["algorithm"].as<std::string> ();
+        std::string algName = vm["algorithm"].as<std::string> ();
 
-		vector<std::string>::iterator it = std::find(allowedAlgorithms.begin(),
-				allowedAlgorithms.end(), algName);
+        vector<std::string>::iterator it = std::find(allowedAlgorithms.begin(),
+                allowedAlgorithms.end(), algName);
 
-		if (it != allowedAlgorithms.end())
-		{
-			opts.Algorithm = algName;
-		}
-		else
-		{
-			dbg(debug::Highest)
-					<< "Incorrect prediction algorithm provided. Exiting."
-					<< endl;
-			exit(1);
-		}
-	}
+        if (it != allowedAlgorithms.end())
+        {
+            opts.Algorithm = algName;
+        }
+        else
+        {
+            dbg(debug::Highest)
+                    << "Incorrect prediction algorithm provided. Exiting."
+                    << endl;
+            exit(1);
+        }
+    }
 
-	return opts;
+    return opts;
 }

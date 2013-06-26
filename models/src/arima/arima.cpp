@@ -23,13 +23,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-/*
- * arima.cpp
- *
- *  Created on: 2010-05-03
- *      Author: darek
- */
-
 #include <arima/arima.h>
 
 #include <util.h>
@@ -58,7 +51,7 @@ namespace arima
 
 void runR(char * filename, std::string *output);
 void writeFileForR(const std::vector<double>& input,
-		const std::vector<int>& order, char *filename, unsigned horizon);
+        const std::vector<int>& order, char *filename, unsigned horizon);
 
 using namespace debug;
 using namespace std;
@@ -66,180 +59,180 @@ using namespace std;
 const char* Arima::FILE_TEMPLATE = "/tmp/arima.XXXXXX";
 
 Arima::Arima() :
-	_horizon(0)
+    _horizon(0)
 {
-	dbg(debug::Informational) << "Arima()" << std::endl;
-	fillOrder();
-	if (!mkfifo(Arima::FILE_TEMPLATE, 0666))
-	{
-		dbg(debug::High) << "Error creating named pipe" << std::endl;
-	}
-	strcpy(_tempFilename, FILE_TEMPLATE);
-	dbg(debug::Informational) << "Arima() - END" << std::endl;
+    dbg(debug::Informational) << "Arima()" << std::endl;
+    fillOrder();
+    if (!mkfifo(Arima::FILE_TEMPLATE, 0666))
+    {
+        dbg(debug::High) << "Error creating named pipe" << std::endl;
+    }
+    strcpy(_tempFilename, FILE_TEMPLATE);
+    dbg(debug::Informational) << "Arima() - END" << std::endl;
 }
 
 Arima::~Arima()
 {
-	unlink(_tempFilename);
+    unlink(_tempFilename);
 }
 
 void Arima::fillOrder()
 {
-	double order[] =
-	{ 1, 1, 1 };
-	unsigned numElem = sizeof(order) / sizeof(order[0]);
+    double order[] =
+    { 1, 1, 1 };
+    unsigned numElem = sizeof(order) / sizeof(order[0]);
 
-	_order.resize(numElem);
-	copy(order, order + numElem, _order.begin());
+    _order.resize(numElem);
+    copy(order, order + numElem, _order.begin());
 }
 
 int counter = 0;
 
 double Arima::getPrediction(unsigned horizon)
 {
-	if (_outputBuff.size() < horizon)
-	{
-		dbg(debug::Informational) << "_outbuf.size(): " << _outputBuff.size()
-				<< std::endl;
-		dbg(debug::Informational) << "COUNTER Prediciton: " << ++counter
-				<< std::endl;
-		preparePrediction(_tempFilename, horizon);
-		parseOutputForPrediction(_buff);
-	}
+    if (_outputBuff.size() < horizon)
+    {
+        dbg(debug::Informational) << "_outbuf.size(): " << _outputBuff.size()
+                << std::endl;
+        dbg(debug::Informational) << "COUNTER Prediciton: " << ++counter
+                << std::endl;
+        preparePrediction(_tempFilename, horizon);
+        parseOutputForPrediction(_buff);
+    }
 
-	return _outputBuff[horizon - 1];
+    return _outputBuff[horizon - 1];
 }
 
 std::vector<int> Arima::getOrder() const
 {
-	return _order;
+    return _order;
 }
 
 void Arima::setOrder(const std::vector<int> & order)
 {
-	if (order != _order)
-	{
-		_order = order;
-		_outputBuff.clear();
-	}
+    if (order != _order)
+    {
+        _order = order;
+        _outputBuff.clear();
+    }
 }
 
 void Arima::preparePrediction(char * filename, unsigned horizon)
 {
-	dbg(debug::Informational) << "preparePrediction" << std::endl;
-	boost::thread_group tg;
-	tg.add_thread(new boost::thread(runR, filename, &_buff));
-	tg.add_thread(new boost::thread(writeFileForR, _input, _order, filename,
-			_horizon));
+    dbg(debug::Informational) << "preparePrediction" << std::endl;
+    boost::thread_group tg;
+    tg.add_thread(new boost::thread(runR, filename, &_buff));
+    tg.add_thread(new boost::thread(writeFileForR, _input, _order, filename,
+            _horizon));
 
-	tg.join_all();
-	dbg(debug::Informational) << "preparePrediction - END" << std::endl;
+    tg.join_all();
+    dbg(debug::Informational) << "preparePrediction - END" << std::endl;
 }
 
 void Arima::provideInput(const std::vector<double>& input, unsigned horizon)
 {
-	dbg(debug::Informational) << "provideInput: " << "(, horizon: " << horizon
-			<< ")" << std::endl;
-	_input = input;
-	_outputBuff.clear();
-	_outputBuff.reserve(horizon);
-	_horizon = horizon;
+    dbg(debug::Informational) << "provideInput: " << "(, horizon: " << horizon
+            << ")" << std::endl;
+    _input = input;
+    _outputBuff.clear();
+    _outputBuff.reserve(horizon);
+    _horizon = horizon;
 }
 
 void Arima::parseOutputForPrediction(const std::string & output)
 {
-	dbg(debug::Informational) << "parseOutputForPrediction" << std::endl;
-	//	dbg() << "R output: " << output << std::endl;
-	std::istringstream input(output);
+    dbg(debug::Informational) << "parseOutputForPrediction" << std::endl;
+    //  dbg() << "R output: " << output << std::endl;
+    std::istringstream input(output);
 
-	std::string line;
-	while (!std::getline(input, line).eof())
-	{
-//		dbg(debug::Informational) << "line: " << lineCount++ << std::endl;
-//		dbg(debug::Informational) << "line: '" << line << "'" << std::endl;
-		size_t pos = line.find(" ", std::log10(_horizon));
-		if (pos != std::string::npos)
-		{
-			std::string tmp(line.substr(pos));
-//			std::remove(tmp.begin(), tmp.end(), ' ');
-			std::istringstream iss(tmp);
-			while (!iss.eof())
-			{
-				double result = 0.0;
-				iss >> result;
-				_outputBuff.push_back(result);
-//				dbg(debug::Informational) << "result: " << result << std::endl;
-			}
-		}
-	}
-	dbg(debug::Informational) << "_outputBuff.size(): " << _outputBuff.size() << std::endl;
-	dbg(debug::Informational) << "parseOutputForPrediction - END" << std::endl;
+    std::string line;
+    while (!std::getline(input, line).eof())
+    {
+//      dbg(debug::Informational) << "line: " << lineCount++ << std::endl;
+//      dbg(debug::Informational) << "line: '" << line << "'" << std::endl;
+        size_t pos = line.find(" ", std::log10(_horizon));
+        if (pos != std::string::npos)
+        {
+            std::string tmp(line.substr(pos));
+//          std::remove(tmp.begin(), tmp.end(), ' ');
+            std::istringstream iss(tmp);
+            while (!iss.eof())
+            {
+                double result = 0.0;
+                iss >> result;
+                _outputBuff.push_back(result);
+//              dbg(debug::Informational) << "result: " << result << std::endl;
+            }
+        }
+    }
+    dbg(debug::Informational) << "_outputBuff.size(): " << _outputBuff.size() << std::endl;
+    dbg(debug::Informational) << "parseOutputForPrediction - END" << std::endl;
 }
 
 void runR(char * filename, std::string *buff)
 {
-	dbg(debug::Informational) << "runR" << std::endl;
-	std::string command = "R --slave -q --vanilla < ";
-	command += filename;
-	FILE * f = popen(command.c_str(), "r");
+    dbg(debug::Informational) << "runR" << std::endl;
+    std::string command = "R --slave -q --vanilla < ";
+    command += filename;
+    FILE * f = popen(command.c_str(), "r");
 
-	std::ostringstream externOutput;
+    std::ostringstream externOutput;
 
-	int character = 0;
-	while ((character = fgetc(f)) != EOF)
-	{
-		externOutput << (char) character;
-	}
+    int character = 0;
+    while ((character = fgetc(f)) != EOF)
+    {
+        externOutput << (char) character;
+    }
 
-	buff->clear();
-	buff->append(externOutput.str());
-	dbg(debug::Informational) << "runR - END" << std::endl;
+    buff->clear();
+    buff->append(externOutput.str());
+    dbg(debug::Informational) << "runR - END" << std::endl;
 }
 
 void writeFileForR(const std::vector<double>& input,
-		const std::vector<int>& order, char *filename, unsigned horizon)
+        const std::vector<int>& order, char *filename, unsigned horizon)
 {
-	dbg(debug::Informational) << "writeFileForR" << std::endl;
-	std::ostringstream outstream;
+    dbg(debug::Informational) << "writeFileForR" << std::endl;
+    std::ostringstream outstream;
 
-	// set the time series
-	outstream << "x <- c(";
-	for (unsigned i = 0; i < input.size(); ++i)
-	{
-		outstream << input[i];
-		if (i < input.size() - 1)
-		{
-			outstream << ", ";
-		}
-	}
-	outstream << ")" << std::endl;
-	// set order of ARIMA - p, d, q
-	outstream << "o <- c(";
-	for (unsigned i = 0; i < order.size(); ++i)
-	{
-		outstream << order[i];
-		if (i < order.size() - 1)
-		{
-			outstream << ", ";
-		}
-	}
-	outstream << ")" << std::endl;
+    // set the time series
+    outstream << "x <- c(";
+    for (unsigned i = 0; i < input.size(); ++i)
+    {
+        outstream << input[i];
+        if (i < input.size() - 1)
+        {
+            outstream << ", ";
+        }
+    }
+    outstream << ")" << std::endl;
+    // set order of ARIMA - p, d, q
+    outstream << "o <- c(";
+    for (unsigned i = 0; i < order.size(); ++i)
+    {
+        outstream << order[i];
+        if (i < order.size() - 1)
+        {
+            outstream << ", ";
+        }
+    }
+    outstream << ")" << std::endl;
 
-	// run arima0
-	outstream << "fit <- arima( x, o )" << std::endl;
+    // run arima0
+    outstream << "fit <- arima( x, o )" << std::endl;
 
-	// run prediction
-	outstream << "pre = predict(fit, n.ahead=" << horizon << ",se.fit=FALSE)"
-			<< std::endl;
-	//	outstream << "tail(pre,1)" << std::endl;
-	outstream << "pre[1:" << horizon << "]" << std::endl;
+    // run prediction
+    outstream << "pre = predict(fit, n.ahead=" << horizon << ",se.fit=FALSE)"
+            << std::endl;
+    //  outstream << "tail(pre,1)" << std::endl;
+    outstream << "pre[1:" << horizon << "]" << std::endl;
 
-	ofstream outFile(filename);
+    ofstream outFile(filename);
 
-	outFile << outstream.str();
+    outFile << outstream.str();
 
-	outFile.close();
-	dbg(debug::Informational) << "writeFileForR - END" << std::endl;
+    outFile.close();
+    dbg(debug::Informational) << "writeFileForR - END" << std::endl;
 }
 
 }

@@ -23,13 +23,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-/*
- * outputlayer.cpp
- *
- *  Created on: 2010-04-17
- *      Author: darek
- */
-
 #include <neural/outputlayer.h>
 
 #include <neural/activationfunction.h>
@@ -41,9 +34,9 @@ namespace models
 namespace neural
 {
 OutputLayer::OutputLayer() :
-	Layer(1, "OUTPUT")
+    Layer(1, "OUTPUT")
 {
-	setActivationFunction(new LinearAF);
+    setActivationFunction(new LinearAF);
 }
 
 }

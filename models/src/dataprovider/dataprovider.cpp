@@ -23,13 +23,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-/*
- * dataprovider.cpp
- *
- *  Created on: 2010-05-01
- *      Author: darek
- */
-
 #include <dataprovider/dataprovider.h>
 
 #include <util.h>
@@ -51,166 +44,166 @@ namespace dataprovider
 using namespace debug;
 
 DataProvider::DataProvider(const std::string& filename) :
-	_filename(filename)
+    _filename(filename)
 {
-	loadFromFile(_filename);
-	dbg() << "DataProvider(): " << _filename << std::endl;
+    loadFromFile(_filename);
+    dbg() << "DataProvider(): " << _filename << std::endl;
 }
 
 DataProvider::~DataProvider()
 {
-	dbg() << "~DataProvider()" << std::endl;
+    dbg() << "~DataProvider()" << std::endl;
 }
 
 double DataProvider::getData(int idx) const
 {
-	return _items[idx];
+    return _items[idx];
 }
 
 std::vector<double> DataProvider::getDataVector(int idx, size_t size) const
 {
-	std::vector<double> tmpVector;
+    std::vector<double> tmpVector;
 
-	for (size_t i = 0; i < size; ++i)
-	{
-		tmpVector.push_back(_items[idx + i]);
-	}
+    for (size_t i = 0; i < size; ++i)
+    {
+        tmpVector.push_back(_items[idx + i]);
+    }
 
-	return tmpVector;
+    return tmpVector;
 }
 
 size_t DataProvider::getDataSize() const
 {
-	return _items.size();
+    return _items.size();
 }
 
 double DataProvider::getAverage(int idx, size_t size) const
 {
-	double sum = 0.0;
+    double sum = 0.0;
 
-	for (size_t i = idx; i < idx + size; ++i)
-	{
-		sum += _items[i];
-	}
+    for (size_t i = idx; i < idx + size; ++i)
+    {
+        sum += _items[i];
+    }
 
-	return sum / size;
+    return sum / size;
 }
 
 double DataProvider::getMeanSquareError(const std::vector<double> & expected,
-		const std::vector<double> & actual)
+        const std::vector<double> & actual)
 {
-	double sumError = 0.0;
+    double sumError = 0.0;
 
-	for (size_t i = 0; i < actual.size(); ++i)
-	{
-		double error = expected[i] - actual[i];
-		error *= error;
-		sumError += error;
-	}
+    for (size_t i = 0; i < actual.size(); ++i)
+    {
+        double error = expected[i] - actual[i];
+        error *= error;
+        sumError += error;
+    }
 
-	return sumError / expected.size();
+    return sumError / expected.size();
 }
 
 double DataProvider::getMaxValue() const
 {
-	double max = *std::max_element(_items.begin(), _items.end());
-	return max;
+    double max = *std::max_element(_items.begin(), _items.end());
+    return max;
 }
 
 double DataProvider::getVariance(const std::vector<double> & expected,
-		const std::vector<double> & actual)
+        const std::vector<double> & actual)
 {
-	// calculate average
-	double sum = 0.0;
+    // calculate average
+    double sum = 0.0;
 
-	for (size_t i = 0; i < actual.size(); ++i)
-	{
-		double val = actual[i];
-		sum += val;
-	}
+    for (size_t i = 0; i < actual.size(); ++i)
+    {
+        double val = actual[i];
+        sum += val;
+    }
 
-	double avg = sum / actual.size();
+    double avg = sum / actual.size();
 
-	// calculate variance
-	sum = 0.0;
-	for (size_t i = 0; i < actual.size(); ++i)
-	{
-		double sq = actual[i] - avg;
-		sq *= sq;
-		sum += sq;
-	}
+    // calculate variance
+    sum = 0.0;
+    for (size_t i = 0; i < actual.size(); ++i)
+    {
+        double sq = actual[i] - avg;
+        sq *= sq;
+        sum += sq;
+    }
 
-	return sum / actual.size();
+    return sum / actual.size();
 }
 
 double DataProvider::getNormalizedMeanSquareError(
-		const std::vector<double> & expected,
-		const std::vector<double> & actual)
+        const std::vector<double> & expected,
+        const std::vector<double> & actual)
 {
-	double meanSqErr = getMeanSquareError(expected, actual);
-	double variance = getVariance(expected, actual);
+    double meanSqErr = getMeanSquareError(expected, actual);
+    double variance = getVariance(expected, actual);
 
-	return meanSqErr / variance;
+    return meanSqErr / variance;
 }
 
 double DataProvider::getSignalToErrorRatio(
-		const std::vector<double> & expected,
-		const std::vector<double> & actual)
+        const std::vector<double> & expected,
+        const std::vector<double> & actual)
 {
-	double rmsData = 0.0;
-	double rmsError = 0.0;
+    double rmsData = 0.0;
+    double rmsError = 0.0;
 
-	for (size_t i = 0; i < actual.size(); ++i)
-	{
-		double valData = actual[i];
-		valData *= valData;
-		double valError = actual[i] - expected[i];
-		valError *= valError;
+    for (size_t i = 0; i < actual.size(); ++i)
+    {
+        double valData = actual[i];
+        valData *= valData;
+        double valError = actual[i] - expected[i];
+        valError *= valError;
 
-		rmsData += valData;
-		rmsError += valError;
-	}
+        rmsData += valData;
+        rmsError += valError;
+    }
 
-	unsigned n = actual.size();
-	rmsData /= n;
-	rmsError /= n;
+    unsigned n = actual.size();
+    rmsData /= n;
+    rmsError /= n;
 
-	rmsData = std::sqrt(rmsData);
-	rmsError = std::sqrt(rmsError);
+    rmsData = std::sqrt(rmsData);
+    rmsError = std::sqrt(rmsError);
 
-	return 10 * std::log10(rmsData / rmsError);
+    return 10 * std::log10(rmsData / rmsError);
 }
 
 bool DataProvider::loadFromFile(const std::string & filename)
 {
-	ifstream inData;
-	list<double> tmpList;
-	inData.open(filename.c_str());
-	if (!inData)
-		return false;
+    ifstream inData;
+    list<double> tmpList;
+    inData.open(filename.c_str());
+    if (!inData)
+        return false;
 
-	size_t size = 0;
-	string line;
-	while (!inData.eof())
-	{
-		getline(inData, line);
-		double tmp = 0.0;
-		std::istringstream iss(line);
-		if (iss >> tmp)
-		{
-			tmpList.push_back(tmp);
-		}
-		else
-		{
-		}
+    size_t size = 0;
+    string line;
+    while (!inData.eof())
+    {
+        getline(inData, line);
+        double tmp = 0.0;
+        std::istringstream iss(line);
+        if (iss >> tmp)
+        {
+            tmpList.push_back(tmp);
+        }
+        else
+        {
+        }
 
-		size++;
-	}
+        size++;
+    }
 
-	_items.reserve(size);
-	copy(tmpList.begin(), tmpList.end(), back_inserter(_items));
+    _items.reserve(size);
+    copy(tmpList.begin(), tmpList.end(), back_inserter(_items));
 
-	return true;
+    return true;
 }
 
 }

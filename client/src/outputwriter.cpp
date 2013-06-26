@@ -23,13 +23,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-/*
- * outputwriter.cpp
- *
- *  Created on: 2010-05-11
- *      Author: darek
- */
-
 #include <outputwriter.h>
 
 #include <algorithm>
@@ -42,40 +35,40 @@ namespace client
 {
 
 OutputWriter::OutputWriter(const std::string& outputFile) :
-	_output(outputFile.c_str()), _outputLines(0)
+    _output(outputFile.c_str()), _outputLines(0)
 {
 
 }
 
 OutputWriter::~OutputWriter()
 {
-	if (_output.is_open())
-	{
-		_output.close();
-	}
+    if (_output.is_open())
+    {
+        _output.close();
+    }
 }
 
 void OutputWriter::write(const std::vector<double> & inputValues, double result, double expected)
 {
-	std::copy(inputValues.begin(), inputValues.end(), std::ostream_iterator<
-			double>(_output, "\t"));
-	_output << result << '\t';
-	_output << expected << '\n';
-	++_outputLines;
+    std::copy(inputValues.begin(), inputValues.end(), std::ostream_iterator<
+            double>(_output, "\t"));
+    _output << result << '\t';
+    _output << expected << '\n';
+    ++_outputLines;
 
-	// flush file every 100 lines
-	//	if( !(_outputLines % 30) )
-	//		_output.flush();
+    // flush file every 100 lines
+    //  if( !(_outputLines % 30) )
+    //      _output.flush();
 }
 
 void OutputWriter::writeTime(double time)
 {
-	_output << "Time: " << time << std::endl;
+    _output << "Time: " << time << std::endl;
 }
 
 void OutputWriter::close()
 {
-	_output.close();
+    _output.close();
 }
 
 }

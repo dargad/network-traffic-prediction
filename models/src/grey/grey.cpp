@@ -23,13 +23,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-/*
- * grey.cpp
- *
- *  Created on: 2010-05-02
- *      Author: darek
- */
-
 #include <grey/grey.h>
 
 #include <util.h>
@@ -43,97 +36,97 @@ namespace grey
 using namespace debug;
 
 Grey::Grey() :
-	_ag(0.0), _ug(0.0)
+    _ag(0.0), _ug(0.0)
 {
 
 }
 
 void Grey::provideInput(const std::vector<double>& input, unsigned horizon)
 {
-	_x0 = input;
+    _x0 = input;
 
-	printSeq("[GREY] input: ", _x0);
+    printSeq("[GREY] input: ", _x0);
 
-	_x1 = performAGO(_x0);
+    _x1 = performAGO(_x0);
 
-	printSeq("[GREY] AGO: ", _x1);
+    printSeq("[GREY] AGO: ", _x1);
 
-	_z1 = applyMean(_x1);
+    _z1 = applyMean(_x1);
 
-	printSeq("[GREY] MEAN: ", _z1);
+    printSeq("[GREY] MEAN: ", _z1);
 
-	matrixOperations();
+    matrixOperations();
 }
 
 const std::vector<double> Grey::performAGO(const std::vector<double>& input)
 {
-	std::vector<double> vecAGO;
+    std::vector<double> vecAGO;
 
-	for (size_t i = 0; i < input.size(); ++i)
-	{
-		double sum = 0;
-		for (size_t j = 0; j <= i; ++j)
-		{
-			sum += input[j];
-		}
-		vecAGO.push_back(sum);
-	}
+    for (size_t i = 0; i < input.size(); ++i)
+    {
+        double sum = 0;
+        for (size_t j = 0; j <= i; ++j)
+        {
+            sum += input[j];
+        }
+        vecAGO.push_back(sum);
+    }
 
-	return vecAGO;
+    return vecAGO;
 }
 
 const std::vector<double> Grey::applyMean(const std::vector<double> & input)
 {
-	std::vector<double> vecMEAN;
+    std::vector<double> vecMEAN;
 
-	for (size_t i = 1; i < input.size(); ++i)
-	{
-		vecMEAN.push_back(0.5 * (input[i] + input[i - 1]));
-	}
+    for (size_t i = 1; i < input.size(); ++i)
+    {
+        vecMEAN.push_back(0.5 * (input[i] + input[i - 1]));
+    }
 
-	return vecMEAN;
+    return vecMEAN;
 }
 
 double Grey::getPrediction(unsigned horizon)
 {
-	double p1 = (_x0[0] - _ug / _ag);
-	double p2 = std::exp(-_ag * (_x0.size() + horizon - 1));
-	double p3 = (1 - std::exp(_ag));
-	double result = p1 * p2 * p3;
-	return result;
+    double p1 = (_x0[0] - _ug / _ag);
+    double p2 = std::exp(-_ag * (_x0.size() + horizon - 1));
+    double p3 = (1 - std::exp(_ag));
+    double result = p1 * p2 * p3;
+    return result;
 }
 
 void Grey::matrixOperations()
 {
-	printSeq("[GREY] _z1: ", _z1);
+    printSeq("[GREY] _z1: ", _z1);
 
-	double C = 0.0;
-	for (unsigned i = 0; i < _z1.size(); ++i)
-	{
-		C += _z1[i];
-	}
+    double C = 0.0;
+    for (unsigned i = 0; i < _z1.size(); ++i)
+    {
+        C += _z1[i];
+    }
 
-	double D = 0.0;
-	for (unsigned i = 1; i < _x0.size(); ++i)
-	{
-		D += _x0[i];
-	}
+    double D = 0.0;
+    for (unsigned i = 1; i < _x0.size(); ++i)
+    {
+        D += _x0[i];
+    }
 
-	double E = 0.0;
-	for (unsigned i = 1; i < _x0.size(); ++i)
-	{
-		E += _z1[i - 1] * _x0[i];
-	}
+    double E = 0.0;
+    for (unsigned i = 1; i < _x0.size(); ++i)
+    {
+        E += _z1[i - 1] * _x0[i];
+    }
 
-	double F = 0.0;
-	for (unsigned i = 0; i < _z1.size(); ++i)
-	{
-		F += _z1[i] * _z1[i];
-	}
+    double F = 0.0;
+    for (unsigned i = 0; i < _z1.size(); ++i)
+    {
+        F += _z1[i] * _z1[i];
+    }
 
-	double n = _x0.size();
-	_ag = (C * D - (n - 1) * E) / ((n - 1) * F - C * C);
-	_ug = (D * F - C * E) / (n * F - 1 - C * C);
+    double n = _x0.size();
+    _ag = (C * D - (n - 1) * E) / ((n - 1) * F - C * C);
+    _ug = (D * F - C * E) / (n * F - 1 - C * C);
 }
 
 }

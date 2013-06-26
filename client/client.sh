@@ -1,11 +1,11 @@
 EXEC=Debug/client
 export LD_LIBRARY_PATH=../models/Release:${LD_LIBRARY_PATH}
-DATA_FILE=/home/darek/output
+DATA_FILE= # ADD
 DEBUG_LEVEL=1
 MODE=training
 HORIZON=1
-INPUT_NET=/home/darek/workspace-cdt/testrun/learning.net
-RESULT_FILE=/home/darek/workspace-cdt/client/result-h${HORIZON}.txt
+INPUT_NET= # ADD
+RESULT_FILE= # ADD
 DO=0 # DATA_OFFSET
 DL=2000 # DATA_LENGTH
 STEP=10 # PREDICTION STEP

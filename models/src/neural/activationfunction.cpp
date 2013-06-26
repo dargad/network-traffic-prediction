@@ -23,13 +23,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-/*
- * activationfunction.cpp
- *
- *  Created on: 2010-05-01
- *      Author: darek
- */
-
 #include <neural/activationfunction.h>
 
 #include <util.h>
@@ -45,98 +38,98 @@ namespace neural
 using namespace debug;
 
 ActivationFunction * ActivationFunction::getActivationFunctionByCode(
-		ActivationFunctionType type)
+        ActivationFunctionType type)
 {
-	ActivationFunction *af = 0;
-	switch (type)
-	{
-	case Linear:
-		af = new LinearAF();
-		break;
-	case Tanh:
-		af = new TanhAF();
-		break;
-	case Exponential:
-		af = new ExponentialAF();
-		break;
-	case Sigmoidal:
-		af = new SigmoidalAF();
-		break;
-	case Square:
-		af = new SquareAF();
-		break;
-	case ExponentialSimple:
-		af = new ExponentialSimpleAF();
-		break;
-	}
+    ActivationFunction *af = 0;
+    switch (type)
+    {
+    case Linear:
+        af = new LinearAF();
+        break;
+    case Tanh:
+        af = new TanhAF();
+        break;
+    case Exponential:
+        af = new ExponentialAF();
+        break;
+    case Sigmoidal:
+        af = new SigmoidalAF();
+        break;
+    case Square:
+        af = new SquareAF();
+        break;
+    case ExponentialSimple:
+        af = new ExponentialSimpleAF();
+        break;
+    }
 
-	return af;
+    return af;
 }
 
 double neural::LinearAF::operator ()(double value) const
 {
-	return value;
+    return value;
 }
 
 double neural::LinearAF::derivative(double value) const
 {
-	return 1.0;
+    return 1.0;
 }
 
 const double TanhAF::BETA = 1.0;
 double neural::TanhAF::operator ()(double value) const
 {
-	return std::tanh(TanhAF::BETA * value);
+    return std::tanh(TanhAF::BETA * value);
 }
 
 double neural::TanhAF::derivative(double value) const
 {
-	double tanh = (*this)(value);
-	return 1 - tanh*tanh;
+    double tanh = (*this)(value);
+    return 1 - tanh*tanh;
 }
 
 const double param_a = 7.0;
 const double param_b = 1.0;
 double neural::ExponentialAF::operator ()(double value) const
 {
-	return std::exp(-(value - param_a) / param_b);
+    return std::exp(-(value - param_a) / param_b);
 }
 
 double neural::ExponentialAF::derivative(double value) const
 {
-	return std::exp(-(value - param_a) / param_b) / (param_b * param_b);
+    return std::exp(-(value - param_a) / param_b) / (param_b * param_b);
 }
 
 const double SigmoidalAF::BETA = 1.0;
 double neural::SigmoidalAF::operator ()(double value) const
 {
-	return 1.0 / (1.0 + std::exp(-SigmoidalAF::BETA * value));
+    return 1.0 / (1.0 + std::exp(-SigmoidalAF::BETA * value));
 }
 
 double neural::SigmoidalAF::derivative(double value) const
 {
-	double buff = (*this)(value);
-	return buff * (1 - buff);
+    double buff = (*this)(value);
+    return buff * (1 - buff);
 }
 
 double neural::SquareAF::operator ()(double value) const
 {
-	return value * value;
+    return value * value;
 }
 
 double neural::SquareAF::derivative(double value) const
 {
-	return 2 * value;
+    return 2 * value;
 }
 
 double neural::ExponentialSimpleAF::operator ()(double value) const
 {
-	return exp(value);
+    return exp(value);
 }
 
 double neural::ExponentialSimpleAF::derivative(double value) const
 {
-	return exp(value);
+    return exp(value);
 }
 
 }

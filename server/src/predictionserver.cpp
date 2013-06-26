@@ -53,152 +53,152 @@ using namespace comm;
 using namespace debug;
 
 PredictionServer::PredictionServer(boost::asio::io_service & io_service,
-		const ParsedOptions& opts) :
-	_acceptor(io_service, boost::asio::ip::tcp::endpoint(
-			boost::asio::ip::tcp::v4(), opts.ListenPort)), _algorithm(
-			opts.Algorithm), _dataProvider(new DataProvider(opts.InputFile)),
-			_opts(opts)
-//	_connection(io_service), _algorithm(opts.Algorithm), _stopFlag(false),
-//			_predictionStarted(false), _opts(opts)
+        const ParsedOptions& opts) :
+    _acceptor(io_service, boost::asio::ip::tcp::endpoint(
+            boost::asio::ip::tcp::v4(), opts.ListenPort)), _algorithm(
+            opts.Algorithm), _dataProvider(new DataProvider(opts.InputFile)),
+            _opts(opts)
+//  _connection(io_service), _algorithm(opts.Algorithm), _stopFlag(false),
+//          _predictionStarted(false), _opts(opts)
 {
-	connection_ptr new_conn(new connection(_acceptor.get_io_service()));
-	_acceptor.async_accept(new_conn->socket(), boost::bind(
-			&PredictionServer::handle_accept, this,
-			boost::asio::placeholders::error, new_conn));
+    connection_ptr new_conn(new connection(_acceptor.get_io_service()));
+    _acceptor.async_accept(new_conn->socket(), boost::bind(
+            &PredictionServer::handle_accept, this,
+            boost::asio::placeholders::error, new_conn));
 
-	createPredictionModel(_algorithm);
+    createPredictionModel(_algorithm);
 
 }
 
 void PredictionServer::handle_read(const boost::system::error_code& e,
-		connection_ptr conn)
+        connection_ptr conn)
 {
-	if (!e)
-	{
-		dbg(debug::Informational) << "Handle read: " << std::endl;
-		dbg(debug::Informational) << _inBuffer << std::endl;
+    if (!e)
+    {
+        dbg(debug::Informational) << "Handle read: " << std::endl;
+        dbg(debug::Informational) << _inBuffer << std::endl;
 
-		unsigned dataStart = _inBuffer.DataOffset;
-		unsigned dataLength = _inBuffer.DataLength;
-		unsigned horizon = _inBuffer.Horizon;
+        unsigned dataStart = _inBuffer.DataOffset;
+        unsigned dataLength = _inBuffer.DataLength;
+        unsigned horizon = _inBuffer.Horizon;
 
-		std::vector<double> inputBuffer(_dataProvider->getDataVector(dataStart,
-				dataLength));
+        std::vector<double> inputBuffer(_dataProvider->getDataVector(dataStart,
+                dataLength));
 
-		_predictionModel->provideInput(inputBuffer, horizon);
+        _predictionModel->provideInput(inputBuffer, horizon);
 
-		double prediction = _predictionModel->getPrediction(horizon);
+        double prediction = _predictionModel->getPrediction(horizon);
 
-//		if( _algorithm == std::string("neural") )
-//		{
-//			printSeq("!!! Input: ", inputBuffer, debug::High);
-//			dbg(debug::High) << "!!! Prediction: " << prediction << std::endl;
-//		}
+//      if( _algorithm == std::string("neural") )
+//      {
+//          printSeq("!!! Input: ", inputBuffer, debug::High);
+//          dbg(debug::High) << "!!! Prediction: " << prediction << std::endl;
+//      }
 
-		_outBuffer = _inBuffer;
-		_outBuffer.Result = prediction;
-		_outBuffer.Algorithm = _algorithm;
-		_outBuffer.DataOffset = _inBuffer.DataOffset;
-		_outBuffer.DataLength = _inBuffer.DataLength;
+        _outBuffer = _inBuffer;
+        _outBuffer.Result = prediction;
+        _outBuffer.Algorithm = _algorithm;
+        _outBuffer.DataOffset = _inBuffer.DataOffset;
+        _outBuffer.DataLength = _inBuffer.DataLength;
 
-		conn->async_write(_outBuffer, boost::bind(
-				&PredictionServer::handle_write, this,
-				boost::asio::placeholders::error, conn));
-	}
-	else
-	{
-		dbg(debug::High) << e.message() << std::endl;
-	}
+        conn->async_write(_outBuffer, boost::bind(
+                &PredictionServer::handle_write, this,
+                boost::asio::placeholders::error, conn));
+    }
+    else
+    {
+        dbg(debug::High) << e.message() << std::endl;
+    }
 }
 
 void PredictionServer::handle_write(const boost::system::error_code& e,
-		connection_ptr conn)
+        connection_ptr conn)
 {
-	if (!e)
-	{
-		dbg(debug::Informational) << "Handle write: " << std::endl;
-		dbg(debug::Informational) << _outBuffer << std::endl;
+    if (!e)
+    {
+        dbg(debug::Informational) << "Handle write: " << std::endl;
+        dbg(debug::Informational) << _outBuffer << std::endl;
 
-		conn->async_read(_inBuffer, boost::bind(&PredictionServer::handle_read,
-						this, boost::asio::placeholders::error, conn));
-	}
-	else
-	{
-		dbg(debug::High) << e.message() << std::endl;
-	}
+        conn->async_read(_inBuffer, boost::bind(&PredictionServer::handle_read,
+                        this, boost::asio::placeholders::error, conn));
+    }
+    else
+    {
+        dbg(debug::High) << e.message() << std::endl;
+    }
 }
 
 void PredictionServer::handle_accept(const boost::system::error_code& e,
-		connection_ptr conn)
+        connection_ptr conn)
 {
-	if (!e)
-	{
-		dbg() << "Accepted connection!" << std::endl;
+    if (!e)
+    {
+        dbg() << "Accepted connection!" << std::endl;
 
-		conn->async_read(_inBuffer, boost::bind(&PredictionServer::handle_read,
-				this, boost::asio::placeholders::error, conn));
+        conn->async_read(_inBuffer, boost::bind(&PredictionServer::handle_read,
+                this, boost::asio::placeholders::error, conn));
 
-		connection_ptr new_conn(new connection(_acceptor.get_io_service()));
-		_acceptor.async_accept(new_conn->socket(), boost::bind(
-				&PredictionServer::handle_accept, this,
-				boost::asio::placeholders::error, new_conn));
-	}
-	else
-	{
-		// An error occurred. Log it and return. Since we are not starting a new
-		// accept operation the io_service will run out of work to do and the
-		// server will exit.
-		dbg(debug::High) << e.message() << std::endl;
-	}
+        connection_ptr new_conn(new connection(_acceptor.get_io_service()));
+        _acceptor.async_accept(new_conn->socket(), boost::bind(
+                &PredictionServer::handle_accept, this,
+                boost::asio::placeholders::error, new_conn));
+    }
+    else
+    {
+        // An error occurred. Log it and return. Since we are not starting a new
+        // accept operation the io_service will run out of work to do and the
+        // server will exit.
+        dbg(debug::High) << e.message() << std::endl;
+    }
 }
 
 void PredictionServer::createPredictionModel(const std::string& algorithm)
 {
-	models::AbstractModel *model = 0;
+    models::AbstractModel *model = 0;
 
-	if (algorithm == "arima")
-	{
-		models::arima::Arima *arima = new models::arima::Arima();
-		std::vector<int> order;
-		order.push_back(1);
-		order.push_back(2);
-		order.push_back(1);
-		arima->setOrder(order);
-		model = arima;
-	}
-	else if (algorithm == "grey")
-	{
-		model = new models::grey::Grey();
-	}
-	else if (algorithm == "chaos")
-	{
-		model = new models::chaos::Chaos(3, 1);
-	}
-	else if (algorithm == "neural")
-	{
-		models::neural::NeuralNet *net = models::neural::NeuralNet::load("learning.net");
-		net->setScale(1.0 / _dataProvider->getMaxValue());
-		model = net;
-	}
+    if (algorithm == "arima")
+    {
+        models::arima::Arima *arima = new models::arima::Arima();
+        std::vector<int> order;
+        order.push_back(1);
+        order.push_back(2);
+        order.push_back(1);
+        arima->setOrder(order);
+        model = arima;
+    }
+    else if (algorithm == "grey")
+    {
+        model = new models::grey::Grey();
+    }
+    else if (algorithm == "chaos")
+    {
+        model = new models::chaos::Chaos(3, 1);
+    }
+    else if (algorithm == "neural")
+    {
+        models::neural::NeuralNet *net = models::neural::NeuralNet::load("learning.net");
+        net->setScale(1.0 / _dataProvider->getMaxValue());
+        model = net;
+    }
 
-	if (model)
-	{
-		_predictionModel = boost::shared_ptr<models::AbstractModel>(model);
-	}
+    if (model)
+    {
+        _predictionModel = boost::shared_ptr<models::AbstractModel>(model);
+    }
 }
 
 double PredictionServer::getPrediction(size_t offset, size_t length,
-		size_t horizon, size_t progress)
+        size_t horizon, size_t progress)
 {
-	std::vector<double> inputVec = _dataProvider->getDataVector(offset, length);
+    std::vector<double> inputVec = _dataProvider->getDataVector(offset, length);
 
-	if (progress == 0)
-	{
-		_predictionModel->provideInput(inputVec, horizon);
-	}
+    if (progress == 0)
+    {
+        _predictionModel->provideInput(inputVec, horizon);
+    }
 
-	// get prediction - progress=0 -> prediction for t+1 etc.
-	return _predictionModel->getPrediction(progress + 1);
+    // get prediction - progress=0 -> prediction for t+1 etc.
+    return _predictionModel->getPrediction(progress + 1);
 }
 
 }

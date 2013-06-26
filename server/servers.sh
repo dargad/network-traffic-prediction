@@ -3,7 +3,7 @@
 PROFILE=Debug
 EXEC=${PROFILE}/server
 ALGORITHMS="chaos grey neural"
-INPUT_FILE=/home/darek/output-1s.txt
+INPUT_FILE=output-1s.txt
 PORT=4421
 DEBUG_LEVEL=2
 export LD_LIBRARY_PATH=../models/${PROFILE}:${LD_LIBRARY_PATH}

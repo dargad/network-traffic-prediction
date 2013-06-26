@@ -47,86 +47,86 @@ class NetSerializer;
 
 class NeuralNet: public AbstractModel
 {
-	friend class NetSerializer;
+    friend class NetSerializer;
 
-	static const double BASE_LEARNING_FACTOR = 0.5;
-	static const double R = 5000.0;
+    static const double BASE_LEARNING_FACTOR = 0.5;
+    static const double R = 5000.0;
 
 
 public:
-	enum ModeOfOperation
-	{
-		Off, Training, Computation
-	};
+    enum ModeOfOperation
+    {
+        Off, Training, Computation
+    };
 
-	NeuralNet();
-	~NeuralNet();
+    NeuralNet();
+    ~NeuralNet();
 
-	void setLayers(const std::vector<boost::shared_ptr<Layer> >& layers);
+    void setLayers(const std::vector<boost::shared_ptr<Layer> >& layers);
 
-	void provideInput(const std::vector<double>& inputValues, unsigned horizon);
+    void provideInput(const std::vector<double>& inputValues, unsigned horizon);
 
-	void trainingStep(const std::vector<double>& inputValues,
-			std::vector<double>& expectedOutput);
+    void trainingStep(const std::vector<double>& inputValues,
+            std::vector<double>& expectedOutput);
 
-	void stepDoneCallback(Layer *layer);
+    void stepDoneCallback(Layer *layer);
 
-	double getPrediction(unsigned horizon);
+    double getPrediction(unsigned horizon);
 
-	double getLearningFactor() const;
-	void setLearningFactor(double learningFactor);
+    double getLearningFactor() const;
+    void setLearningFactor(double learningFactor);
 
-	void save(const std::string& filename);
-	static NeuralNet * load(const std::string& filename);
+    void save(const std::string& filename);
+    static NeuralNet * load(const std::string& filename);
 
-	void setScale(double scale);
-	double getScale() const;
-
-private:
-	void backPropagationTraining(Layer *outputLayer);
-	void calculateErrorValues(Layer *outputLayer);
-	void updateWeightValues();
-	void updateLearningFactor();
-	std::vector<double> scaleVector(const std::vector<double>& vec) const;
+    void setScale(double scale);
+    double getScale() const;
 
 private:
-	std::vector<boost::shared_ptr<Layer> > _layers;
-	std::map<std::string, boost::shared_ptr<Layer> > _nextMap;
-	std::map<std::string, boost::shared_ptr<Layer> > _prevMap;
+    void backPropagationTraining(Layer *outputLayer);
+    void calculateErrorValues(Layer *outputLayer);
+    void updateWeightValues();
+    void updateLearningFactor();
+    std::vector<double> scaleVector(const std::vector<double>& vec) const;
 
-	// expected output values (used for training)
-	std::vector<double> _expectedOutput;
-	ModeOfOperation _mode;
+private:
+    std::vector<boost::shared_ptr<Layer> > _layers;
+    std::map<std::string, boost::shared_ptr<Layer> > _nextMap;
+    std::map<std::string, boost::shared_ptr<Layer> > _prevMap;
 
-	long _numLearningSteps;
-	double _learningFactor;
-	std::vector<double> _resultBuffer;
-	std::vector<double> _inputBuffer;
-	double _scale;
+    // expected output values (used for training)
+    std::vector<double> _expectedOutput;
+    ModeOfOperation _mode;
+
+    long _numLearningSteps;
+    double _learningFactor;
+    std::vector<double> _resultBuffer;
+    std::vector<double> _inputBuffer;
+    double _scale;
 };
 
 inline
 double NeuralNet::getLearningFactor() const
 {
-	return _learningFactor;
+    return _learningFactor;
 }
 
 inline
 void NeuralNet::setLearningFactor(double learningFactor)
 {
-	_learningFactor = learningFactor;
+    _learningFactor = learningFactor;
 }
 
 inline
 double NeuralNet::getScale() const
 {
-	return _scale;
+    return _scale;
 }
 
 inline
 void NeuralNet::setScale(double scale)
 {
-	_scale = scale;
+    _scale = scale;
 }
 
 }

@@ -23,13 +23,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-/*
- * layer.cpp
- *
- *  Created on: 2010-04-15
- *      Author: darek
- */
-
 #include <neural/layer.h>
 
 #include <neural/neuron.h>
@@ -49,96 +42,96 @@ namespace neural
 using namespace debug;
 
 Layer::Layer(size_t num, std::string name) :
-	_num(num), _name(name), _activationFunction(new SigmoidalAF), _bias(1.0)
-//	_num(num), _name(name), _activationFunction(new ExponentialAF), _bias(1.0), _net(0)
-//	_num(num), _name(name), _activationFunction(&linear), _activationFunctionDerivative(&der_linear), _bias(1.0), _net(0)
-//	_num(num), _name(name), _activationFunction(&square), _activationFunctionDerivative(&der_square), _bias(100.0), _net(0)
+    _num(num), _name(name), _activationFunction(new SigmoidalAF), _bias(1.0)
+//  _num(num), _name(name), _activationFunction(new ExponentialAF), _bias(1.0), _net(0)
+//  _num(num), _name(name), _activationFunction(&linear), _activationFunctionDerivative(&der_linear), _bias(1.0), _net(0)
+//  _num(num), _name(name), _activationFunction(&square), _activationFunctionDerivative(&der_square), _bias(100.0), _net(0)
 {
-	for(size_t i=0; i<_num; ++i)
-	{
-		boost::shared_ptr<Neuron> ptr(new Neuron(getName()));
-		_neurons.push_back(ptr);
-	}
+    for(size_t i=0; i<_num; ++i)
+    {
+        boost::shared_ptr<Neuron> ptr(new Neuron(getName()));
+        _neurons.push_back(ptr);
+    }
 }
 
 Layer::~Layer()
 {
-//	dbg() << "~Layer() " << getName() << std::endl;
+//  dbg() << "~Layer() " << getName() << std::endl;
 }
 
 void Layer::insertInput(const std::vector<double>& input)
 {
-	_buffer.clear();
+    _buffer.clear();
 
-	_numInputs = input.size();
+    _numInputs = input.size();
 
-	for(std::vector<boost::shared_ptr<Neuron> >::iterator it = _neurons.begin();
-			it != _neurons.end(); ++it)
-	{
-		boost::shared_ptr<Neuron> neuron = *it;
-		if( neuron->getNumberInputs() == 0)
-		{
-			neuron->setNumberInputs(input.size());
-		}
-		neuron->insertInput(input, _bias, *_activationFunction);
-		_buffer.push_back(neuron->getOutput());
-	}
+    for(std::vector<boost::shared_ptr<Neuron> >::iterator it = _neurons.begin();
+            it != _neurons.end(); ++it)
+    {
+        boost::shared_ptr<Neuron> neuron = *it;
+        if( neuron->getNumberInputs() == 0)
+        {
+            neuron->setNumberInputs(input.size());
+        }
+        neuron->insertInput(input, _bias, *_activationFunction);
+        _buffer.push_back(neuron->getOutput());
+    }
 
-	printSeq("[" + _name + "] Buffers: ", _buffer);
+    printSeq("[" + _name + "] Buffers: ", _buffer);
 
-	stepDone();
+    stepDone();
 }
 
 void Layer::stepDone()
 {
-	_callback(this);
+    _callback(this);
 }
 
 std::vector<double> Layer::getOutput() const
 {
-	return _buffer;
+    return _buffer;
 }
 
 boost::shared_ptr<Neuron> Layer::operator[](size_t idx) const
 {
-	if (idx < _num)
-	{
-		return _neurons[idx];
-	}
-	return boost::shared_ptr<Neuron>();
+    if (idx < _num)
+    {
+        return _neurons[idx];
+    }
+    return boost::shared_ptr<Neuron>();
 }
 
 void Layer::setErrorValues(std::vector<double> errorValues)
 {
-	for(size_t i=0; i<errorValues.size(); ++i)
-	{
-		_neurons[i]->setErrorValue(errorValues[i]);
-	}
+    for(size_t i=0; i<errorValues.size(); ++i)
+    {
+        _neurons[i]->setErrorValue(errorValues[i]);
+    }
 }
 
 std::vector<double> Layer::errorValues() const
 {
-	return _errors;
+    return _errors;
 }
 
 void Layer::setActivationFunction(boost::shared_ptr<ActivationFunction> af)
 {
-	_activationFunction = af;
+    _activationFunction = af;
 }
 
 void Layer::setActivationFunction(ActivationFunction *af)
 {
-	_activationFunction = boost::shared_ptr<ActivationFunction>(af);
+    _activationFunction = boost::shared_ptr<ActivationFunction>(af);
 }
 
 boost::shared_ptr<ActivationFunction> Layer::activationFunction() const
 {
-	return _activationFunction;
+    return _activationFunction;
 }
 
 void Layer::setCallback(boost::function<void (Layer*)> f)
 {
-	_callback = f;
+    _callback = f;
 }
 
 }

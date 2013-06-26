@@ -23,13 +23,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-/*
- * protocol.cpp
- *
- *  Created on: 2010-05-07
- *      Author: darek
- */
-
 #include "../../include/comm/protocol.h"
 
 #include <iostream>
@@ -40,7 +33,7 @@ namespace comm
 namespace protocol
 {
 Message::Message():
-		DataOffset(0), DataLength(0), Horizon(0), Result(0.0)
+        DataOffset(0), DataLength(0), Horizon(0), Result(0.0)
 {
 }
 
@@ -51,12 +44,12 @@ namespace std
 {
 ostream &operator<<(ostream &out, const comm::protocol::Message& msg)
 {
-	static const std::string bar("=================================================");
-	out << bar << endl;
-	out << "Data: (" << msg.DataOffset << ", " << msg.DataLength << ")" << endl;
-	out << "Prediction: " << msg.Result << " (horizon: " << msg.Horizon << ")"
-			<< endl;
-	out << bar << endl;
-	return out;
+    static const std::string bar("=================================================");
+    out << bar << endl;
+    out << "Data: (" << msg.DataOffset << ", " << msg.DataLength << ")" << endl;
+    out << "Prediction: " << msg.Result << " (horizon: " << msg.Horizon << ")"
+            << endl;
+    out << bar << endl;
+    return out;
 }
 }

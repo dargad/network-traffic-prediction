@@ -23,13 +23,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-/*
- * netserializer.cpp
- *
- *  Created on: 2010-05-06
- *      Author: darek
- */
-
 #include <neural/netserializer.h>
 
 #include <neural/layer.h>
@@ -58,208 +51,208 @@ NetSerializer::~NetSerializer()
 }
 
 void NetSerializer::saveToFile(const boost::shared_ptr<NeuralNet> & net,
-		const string & filename)
+        const string & filename)
 {
-	ostringstream oss;
+    ostringstream oss;
 
-	oss << "Learning factor: " << net->getLearningFactor() << endl;
+    oss << "Learning factor: " << net->getLearningFactor() << endl;
 
-	for (size_t i = 0; i < net->_layers.size(); ++i)
-	{
-		boost::shared_ptr<Layer> layer = net->_layers[i];
-		oss << "Layer" << endl;
-		oss << "Type: " << layer->getType() << endl;
-		oss << "Name: " << layer->getName() << endl;
-		oss << "Bias: " << layer->bias() << endl;
-		//		dbg() << "ActivationFunction::SAVE: "
-		//				<< layer->activationFunction()->getActivationFunctionType()
-		//				<< endl;
-		oss << "ActivationFunction: "
-				<< layer->activationFunction()->getActivationFunctionType()
-				<< endl;
+    for (size_t i = 0; i < net->_layers.size(); ++i)
+    {
+        boost::shared_ptr<Layer> layer = net->_layers[i];
+        oss << "Layer" << endl;
+        oss << "Type: " << layer->getType() << endl;
+        oss << "Name: " << layer->getName() << endl;
+        oss << "Bias: " << layer->bias() << endl;
+        //      dbg() << "ActivationFunction::SAVE: "
+        //              << layer->activationFunction()->getActivationFunctionType()
+        //              << endl;
+        oss << "ActivationFunction: "
+                << layer->activationFunction()->getActivationFunctionType()
+                << endl;
 
-		oss << "Neurons: " << layer->neuronCount() << endl;
-		for (size_t n = 0; n < layer->neuronCount(); ++n)
-		{
-			boost::shared_ptr<Neuron> neuron = (*layer)[n];
+        oss << "Neurons: " << layer->neuronCount() << endl;
+        for (size_t n = 0; n < layer->neuronCount(); ++n)
+        {
+            boost::shared_ptr<Neuron> neuron = (*layer)[n];
 
-			for (size_t j = 0; j < neuron->getNumberInputs(); ++j)
-			{
-				oss << (*neuron)[j] << "\t";
-			}
-			oss << endl;
-			for (size_t j = 0; j < neuron->getNumberInputs(); ++j)
-			{
-				oss << neuron->_lastWeightDeltas[j] << "\t";
-			}
-			oss << endl;
-		}
-	}
+            for (size_t j = 0; j < neuron->getNumberInputs(); ++j)
+            {
+                oss << (*neuron)[j] << "\t";
+            }
+            oss << endl;
+            for (size_t j = 0; j < neuron->getNumberInputs(); ++j)
+            {
+                oss << neuron->_lastWeightDeltas[j] << "\t";
+            }
+            oss << endl;
+        }
+    }
 
-	ofstream outfile(filename.c_str());
-	string buff(oss.str());
-	outfile << buff;
+    ofstream outfile(filename.c_str());
+    string buff(oss.str());
+    outfile << buff;
 
-	//	dbg() << "Output: " << endl;
-	//	dbg() << buff << endl;
-	outfile.close();
+    //  dbg() << "Output: " << endl;
+    //  dbg() << buff << endl;
+    outfile.close();
 }
 
 NeuralNet * NetSerializer::loadFromFile(const string& filename)
 {
-	ifstream infile(filename.c_str());
+    ifstream infile(filename.c_str());
 
-	string line;
+    string line;
 
-	NeuralNet *net = new NeuralNet;
-	vector<boost::shared_ptr<Layer> > layers;
+    NeuralNet *net = new NeuralNet;
+    vector<boost::shared_ptr<Layer> > layers;
 
-	boost::shared_ptr<Layer> tmpLayer;
+    boost::shared_ptr<Layer> tmpLayer;
 
-	double bias;
-	string layerName;
-	size_t numNeurons;
-	Layer::LayerType layerType(Layer::Regular);
-	ActivationFunction *af;
+    double bias;
+    string layerName;
+    size_t numNeurons;
+    Layer::LayerType layerType(Layer::Regular);
+    ActivationFunction *af;
 
-	while (!getline(infile, line).eof())
-	{
-		if (line.find("Learning factor") != string::npos)
-		{
-			double val = 0.0;
-			stringstream inbuf(getFieldValue(line));
-			inbuf >> val;
-			net->setLearningFactor(val);
-		}
+    while (!getline(infile, line).eof())
+    {
+        if (line.find("Learning factor") != string::npos)
+        {
+            double val = 0.0;
+            stringstream inbuf(getFieldValue(line));
+            inbuf >> val;
+            net->setLearningFactor(val);
+        }
 
-		if (line == "Layer")
-		{
-			if (tmpLayer != boost::shared_ptr<Layer>())
-			{
-				layers.push_back(tmpLayer);
-			}
-		}
+        if (line == "Layer")
+        {
+            if (tmpLayer != boost::shared_ptr<Layer>())
+            {
+                layers.push_back(tmpLayer);
+            }
+        }
 
-		if (line.find("Type") != string::npos)
-		{
-			int val = 0;
-			istringstream inbuf(getFieldValue(line));
-			inbuf >> val;
-			layerType = static_cast<Layer::LayerType> (val);
-		}
+        if (line.find("Type") != string::npos)
+        {
+            int val = 0;
+            istringstream inbuf(getFieldValue(line));
+            inbuf >> val;
+            layerType = static_cast<Layer::LayerType> (val);
+        }
 
-		if (line.find("Name") != string::npos)
-		{
-			layerName = getFieldValue(line);
-			//			dbg() << "'" << layerName << "'" << endl;
-		}
+        if (line.find("Name") != string::npos)
+        {
+            layerName = getFieldValue(line);
+            //          dbg() << "'" << layerName << "'" << endl;
+        }
 
-		if (line.find("Bias") != string::npos)
-		{
-			istringstream inbuf(getFieldValue(line));
-			inbuf >> bias;
-		}
+        if (line.find("Bias") != string::npos)
+        {
+            istringstream inbuf(getFieldValue(line));
+            inbuf >> bias;
+        }
 
-		if (line.find("ActivationFunction") != string::npos)
-		{
-			int val = 0;
-			istringstream inbuf(getFieldValue(line));
-			inbuf >> val;
-			ActivationFunctionType afType =
-					static_cast<ActivationFunctionType> (val);
-			//			dbg(debug::Error) << "line: " << line << "\t" << "afType: " << val << std::endl;
+        if (line.find("ActivationFunction") != string::npos)
+        {
+            int val = 0;
+            istringstream inbuf(getFieldValue(line));
+            inbuf >> val;
+            ActivationFunctionType afType =
+                    static_cast<ActivationFunctionType> (val);
+            //          dbg(debug::Error) << "line: " << line << "\t" << "afType: " << val << std::endl;
 
-			af = ActivationFunction::getActivationFunctionByCode(afType);
-		}
+            af = ActivationFunction::getActivationFunctionByCode(afType);
+        }
 
-		if (line.find("Neurons") != string::npos)
-		{
-			//			std::dbg() << "num neurons found (line): " << line << std::endl;
-			istringstream inbuf(getFieldValue(line));
-			inbuf >> numNeurons;
+        if (line.find("Neurons") != string::npos)
+        {
+            //          std::dbg() << "num neurons found (line): " << line << std::endl;
+            istringstream inbuf(getFieldValue(line));
+            inbuf >> numNeurons;
 
-			//			std::dbg() << "num neurons found: " << numNeurons << std::endl;
+            //          std::dbg() << "num neurons found: " << numNeurons << std::endl;
 
-			tmpLayer = createNewLayer(layerType, numNeurons, layerName);
-			tmpLayer->setBias(bias);
-			tmpLayer->setActivationFunction(af);
+            tmpLayer = createNewLayer(layerType, numNeurons, layerName);
+            tmpLayer->setBias(bias);
+            tmpLayer->setActivationFunction(af);
 
-			for (unsigned i = 0; i < numNeurons; ++i)
-			{
-				// read _weights
-				getline(infile, line);
-				// remove the ending tab before creating istringstream
-				istringstream weights(line.substr(0, line.size() - 1));
-				int weightNum = 0;
-				while (weights.good())
-				{
-					double val;
-					weights >> val;
-					(*(*tmpLayer)[i])[weightNum] = val;
-					//					std::dbg() << "Weight: " << val << std::endl;
-					++weightNum;
-				}
+            for (unsigned i = 0; i < numNeurons; ++i)
+            {
+                // read _weights
+                getline(infile, line);
+                // remove the ending tab before creating istringstream
+                istringstream weights(line.substr(0, line.size() - 1));
+                int weightNum = 0;
+                while (weights.good())
+                {
+                    double val;
+                    weights >> val;
+                    (*(*tmpLayer)[i])[weightNum] = val;
+                    //                  std::dbg() << "Weight: " << val << std::endl;
+                    ++weightNum;
+                }
 
-				(*tmpLayer)[i]->setNumberInputs(weightNum);
+                (*tmpLayer)[i]->setNumberInputs(weightNum);
 
-				// read _lastWeightsDeltas
-				getline(infile, line);
-				// remove the ending tab before creating istringstream
-				istringstream deltas(line.substr(0, line.size() - 1));
-				int deltaNum = 0;
-				std::vector<double> delta_vec;
-				while (deltas.good())
-				{
-					double val;
-					deltas >> val;
-					delta_vec.push_back(val);
-					++deltaNum;
-				}
-				(*tmpLayer)[i]->_lastWeightDeltas.resize(delta_vec.size());
-				copy(delta_vec.begin(), delta_vec.end(),
-						(*tmpLayer)[i]->_lastWeightDeltas.begin());
-			}
-		}
+                // read _lastWeightsDeltas
+                getline(infile, line);
+                // remove the ending tab before creating istringstream
+                istringstream deltas(line.substr(0, line.size() - 1));
+                int deltaNum = 0;
+                std::vector<double> delta_vec;
+                while (deltas.good())
+                {
+                    double val;
+                    deltas >> val;
+                    delta_vec.push_back(val);
+                    ++deltaNum;
+                }
+                (*tmpLayer)[i]->_lastWeightDeltas.resize(delta_vec.size());
+                copy(delta_vec.begin(), delta_vec.end(),
+                        (*tmpLayer)[i]->_lastWeightDeltas.begin());
+            }
+        }
 
-	}
+    }
 
-	layers.push_back(tmpLayer);
+    layers.push_back(tmpLayer);
 
-	net->setLayers(layers);
+    net->setLayers(layers);
 
-	return net;
+    return net;
 }
 
 string NetSerializer::getFieldValue(const string & line)
 {
-	size_t pos = line.find_first_of(':');
-	if (pos != string::npos)
-	{
-		return line.substr(pos + 2);
-	}
-	return string();
+    size_t pos = line.find_first_of(':');
+    if (pos != string::npos)
+    {
+        return line.substr(pos + 2);
+    }
+    return string();
 }
 
 boost::shared_ptr<Layer> NetSerializer::createNewLayer(
-		Layer::LayerType layerType, size_t numNeurons,
-		const std::string& layerName)
+        Layer::LayerType layerType, size_t numNeurons,
+        const std::string& layerName)
 {
-	Layer *layer = 0;
+    Layer *layer = 0;
 
-	if (layerType == Layer::Regular)
-	{
-		layer = new Layer(numNeurons, layerName);
-	}
-	else if (layerType == Layer::Input)
-	{
-		layer = new InputLayer(numNeurons);
-	}
-	else if (layerType == Layer::Output)
-	{
-		layer = new OutputLayer;
-	}
+    if (layerType == Layer::Regular)
+    {
+        layer = new Layer(numNeurons, layerName);
+    }
+    else if (layerType == Layer::Input)
+    {
+        layer = new InputLayer(numNeurons);
+    }
+    else if (layerType == Layer::Output)
+    {
+        layer = new OutputLayer;
+    }
 
-	return boost::shared_ptr<Layer>(layer);
+    return boost::shared_ptr<Layer>(layer);
 }
 
 }

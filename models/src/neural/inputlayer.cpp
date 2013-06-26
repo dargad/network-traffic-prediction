@@ -23,13 +23,6 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-/*
- * inputlayer.cpp
- *
- *  Created on: 2010-04-16
- *      Author: darek
- */
-
 #include <neural/inputlayer.h>
 
 #include <neural/neuron.h>
@@ -49,59 +42,59 @@ namespace neural
 using namespace debug;
 
 InputLayer::InputLayer(int num) :
-	Layer(num, "INPUT")
+    Layer(num, "INPUT")
 {
-	setActivationFunction(new LinearAF);
+    setActivationFunction(new LinearAF);
 }
 
 void InputLayer::insertInput(const std::vector<double> & input)
 {
-	std::vector<double> inputBuffer;
+    std::vector<double> inputBuffer;
 
-	if (input.size() > neuronCount())
-	{
-		std::copy(input.begin() + input.size() - neuronCount(), input.end(),
-				std::back_inserter(inputBuffer));
-	}
-	else
-	{
-		std::copy(input.begin(), input.end(), std::back_inserter(inputBuffer));
-	}
+    if (input.size() > neuronCount())
+    {
+        std::copy(input.begin() + input.size() - neuronCount(), input.end(),
+                std::back_inserter(inputBuffer));
+    }
+    else
+    {
+        std::copy(input.begin(), input.end(), std::back_inserter(inputBuffer));
+    }
 
-	_buffer.clear();
+    _buffer.clear();
 
-//	for (std::vector<boost::shared_ptr<Neuron> >::iterator it = _neurons.begin(); it
-//			!= _neurons.end(); ++it)
-	for(unsigned i=0; i<neuronCount(); ++i)
-	{
-		boost::shared_ptr<Neuron> neuron = _neurons[i];
+//  for (std::vector<boost::shared_ptr<Neuron> >::iterator it = _neurons.begin(); it
+//          != _neurons.end(); ++it)
+    for(unsigned i=0; i<neuronCount(); ++i)
+    {
+        boost::shared_ptr<Neuron> neuron = _neurons[i];
 
-		std::vector<double> tmpInput;
-		tmpInput.push_back(inputBuffer[i]);
+        std::vector<double> tmpInput;
+        tmpInput.push_back(inputBuffer[i]);
 
-		neuron->insertInput(tmpInput, _bias, *_activationFunction);
-		_buffer.push_back(neuron->getOutput());
-	}
+        neuron->insertInput(tmpInput, _bias, *_activationFunction);
+        _buffer.push_back(neuron->getOutput());
+    }
 
-	printSeq("Buffers in " + _name + ": ", _buffer);
+    printSeq("Buffers in " + _name + ": ", _buffer);
 
-	stepDone();
+    stepDone();
 }
 
 //void InputLayer::insertInput(const std::vector<double> & input)
 //{
-//	_buffer.clear();
+//  _buffer.clear();
 //
-//	if (input.size() > neuronCount())
-//	{
-//		std::copy(input.begin()+input.size()-neuronCount(), input.end(), std::back_inserter(_buffer));
-//	}
-//	else
-//	{
-//		std::copy(input.begin(), input.end(), _buffer.begin());
-//	}
+//  if (input.size() > neuronCount())
+//  {
+//      std::copy(input.begin()+input.size()-neuronCount(), input.end(), std::back_inserter(_buffer));
+//  }
+//  else
+//  {
+//      std::copy(input.begin(), input.end(), _buffer.begin());
+//  }
 //
-//	stepDone();
+//  stepDone();
 //}
 
 }
