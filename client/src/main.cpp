@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
 ParsedOptions parseOptions(int argc, char *argv[])
 {
-    po::options_description desc("Server options");
+    po::options_description desc("Client options");
     desc.add_options()("help,h", "produce help message")
 
     ("servers,s", po::value<std::vector<std::string> >(),
